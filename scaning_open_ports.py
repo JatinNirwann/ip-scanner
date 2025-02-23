@@ -2,7 +2,8 @@ import socket
 import threading
 from queue import Queue
 
-target_ip = "192.168.1.8"
+
+target_ip = input("Enter the ip address of target device :\n")
 def port_scan(port):
     print(f"Scanning {port}")
     try:
