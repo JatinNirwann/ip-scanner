@@ -4,6 +4,10 @@ from queue import Queue
 
 
 target_ip = input("Enter the ip address of target device :\n")
+no_of_ports = int(input("Enter last port no:\n") or 1025)
+
+difference = int(no_of_ports/4)
+
 def port_scan(port):
     print(f"Scanning {port}")
     try:
@@ -21,26 +25,26 @@ threading_queue = Queue()
 
 
 
-
 def scan1():
-    for i in range(1,31):
+    for i in range(0,difference):
         if port_scan(i):
             open_ports.put(i)
 
 def scan2():
-    for j in range(31,51):
+    for j in range(difference,2*difference):
         if port_scan(j):
             open_ports.put(j)
 
 def scan3():
-    for k in range(51,71):
+    for k in range(2*difference,3*difference):
         if port_scan(k):
             open_ports.put(k)
  
 def scan4():
-    for l in range(71,91):
+    for l in range(3*difference,4*difference):
         if port_scan(l):
             open_ports.put(l)
+
 
 first_thread =threading.Thread(target=scan1)
 second_thread = threading.Thread(target=scan2)
