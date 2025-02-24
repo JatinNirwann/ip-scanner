@@ -1,44 +1,42 @@
-import socket
 import threading
 from queue import Queue
 import netifaces
+import time
+import os
+import scapy.all as scapy
 
-host_port = 2000
-host_found = Queue()
+threads =[]
 
 def get_subnet():
     try:
-        gateway = netifaces.gateways()['default'][netifaces.AF_INET][1]
+        gateway = netifaces.gateways()['default'][netifaces.AF_INET][0]  #0 for gateway IP
+        print(gateway)
         
-        addr_info = netifaces.ifaddresses(gateway)[netifaces.AF_INET][0]
-        ip_address = addr_info['addr']
-
-        ip_sliced = ip_address.split(".")
-        print(ip_sliced)
-        final_subnet = ip_sliced[:-1]
-        final_subnet_string = '.'.join(final_subnet)
-        return f"{final_subnet_string}.0"
-
+        return '.'.join(gateway.split('.')[:-1])
+        
     except Exception as e:
-        return f"Error: {e}"
-
+        print(f"Error getting subnet: {e}")
+        return None
 
 subnet = get_subnet()
 print(subnet)
-try:
-    connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    connection.settimeout(0.3)
-    for i in range(1,256):
-        host = subnet + "." + str(i)
-    connection.connect((host,host_port))
-    print("Connection Successfull")
 
-except:
-    print("Connection Failed")
-
-finally:
-    connection.close()
+def ping_host(ip):
+    packet = scapy.IP(dst=ip)/scapy.ICMP()
+    reply = scapy.sr1(packet, timeout=1, verbose=False)
+    
+    if reply:
+        print(f"Device found: {ip}")
 
 
+for i in range(1, 255):
+    ip = f"{subnet}.{i}"
+    thread = threading.Thread(target=ping_host, args=(ip,))
+    threads.append(thread)
+    thread.start()
 
+# Wait for all threads to finish
+for thread in threads:
+    thread.join()
 
+print("Scan complete!")
